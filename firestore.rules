@@ -1,0 +1,104 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // ───────────────────────────────────────────────
+    // Helpers
+    // ───────────────────────────────────────────────
+
+    // Role is stored inconsistently ('user' vs 'User' vs 'Admin')
+    // so every check is case-insensitive.
+    function currentUserDoc() {
+      return get(/databases/$(database)/documents/users/$(request.auth.uid));
+    }
+
+    function isAdmin() {
+      return request.auth != null
+        && currentUserDoc().data.role is string
+        && currentUserDoc().data.role.lower() == 'admin';
+    }
+
+    function isSelf(userId) {
+      return request.auth != null && request.auth.uid == userId;
+    }
+
+    // ───────────────────────────────────────────────
+    // Ratings (rate app)
+    // ───────────────────────────────────────────────
+    match /ratings/{ratingId} {
+      allow read: if true;
+      allow create: if request.auth != null
+        && request.resource.data.rating is number
+        && request.resource.data.rating >= 1
+        && request.resource.data.rating <= 5;
+      // Only an admin may edit or remove a submitted review.
+      allow update, delete: if isAdmin();
+    }
+
+    // ───────────────────────────────────────────────
+    // Scholarships (public read, admin write)
+    // ───────────────────────────────────────────────
+    match /scholarships/{scholarshipId} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
+    // ───────────────────────────────────────────────
+    // Users
+    // ───────────────────────────────────────────────
+    match /users/{userId} {
+      // Admins may list every user; users may read only themselves.
+      allow read: if isAdmin() || isSelf(userId);
+
+      allow create: if isSelf(userId);
+
+      // A user may edit their own profile, but must never be able to
+      // escalate their own role (or unblock themselves) via the client.
+      allow update: if isAdmin()
+        || (isSelf(userId)
+            && !request.resource.data.diff(resource.data)
+                 .affectedKeys()
+                 .hasAny(['role', 'blocked']));
+
+      allow delete: if isAdmin();
+
+      // ── Notifications subcollection ──
+      match /notifications/{notifId} {
+        allow read: if isSelf(userId) || isAdmin();
+        // Users can flip `read`; admins can broadcast.
+        allow create: if isAdmin();
+        allow update: if isSelf(userId) || isAdmin();
+        allow delete: if isSelf(userId) || isAdmin();
+      }
+
+      // ── Per-user private bookmarks ──
+      match /private/{document=**} {
+        allow read, write: if isSelf(userId) || isAdmin();
+      }
+    }
+
+    // ───────────────────────────────────────────────
+    // Config
+    // ───────────────────────────────────────────────
+    // Public runtime settings — readable by anyone (checked pre-auth on splash).
+    match /config/system {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
+    // Secrets (Gemini key, web client ids) — authenticated users only.
+    match /config/{document=**} {
+      allow read: if request.auth != null;
+      allow write: if isAdmin();
+    }
+
+    // ───────────────────────────────────────────────
+    // Audit logs — admin read/write only
+    // ───────────────────────────────────────────────
+    match /audit_logs/{logId} {
+      allow read: if isAdmin();
+      allow create: if isAdmin();
+      allow update, delete: if false;
+    }
+  }
+}

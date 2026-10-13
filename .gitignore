@@ -1,0 +1,26 @@
+# ── Secrets ────────────────────────────────────────────────────────────────
+# Gemini API key for local development. Never commit a real key — share it via
+# `flutter run --dart-define=GEMINI_API_KEY=...` or the Firestore document
+# `config/api_keys`.
+assets/ai_config.json
+
+# ── Flutter / Dart ─────────────────────────────────────────────────────────
+.dart_tool/
+.packages
+.flutter-plugins
+.flutter-plugins-dependencies
+build/
+pubspec.lock
+*.iml
+.idea/
+.vscode/
+
+# ── Platform secrets ──────────────────────────────────────────────────────
+**/google-services.json
+**/GoogleService-Info.plist
+android/key.properties
+ios/Runner/GoogleService-Info.plist
+
+# ── Misc ───────────────────────────────────────────────────────────────────
+*.log
+.DS_Store

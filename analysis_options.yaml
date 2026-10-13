@@ -1,0 +1,40 @@
+# This file configures the analyzer, which statically analyzes Dart code to
+# check for errors, warnings, and lints.
+#
+# The issues identified by the analyzer are surfaced in the UI of Dart-enabled
+# IDEs (https://dart.dev/tools#ides-and-editors). The analyzer can also be
+# invoked from the command line by running `flutter analyze`.
+
+# The following line activates a set of recommended lints for Flutter apps,
+# packages, and plugins designed to encourage good coding practices.
+include: package:flutter_lints/flutter.yaml
+
+analyzer:
+  exclude:
+    # Throwaway developer scratch scripts kept at the repo root — they are not
+    # part of the app and previously broke `flutter analyze` / `flutter test`.
+    - test_ai.dart
+    - test_ai_system.dart
+    - test_api_key.dart
+    - list_models.dart
+    - analysis.txt
+    - analysis2.txt
+    - final_analysis.txt
+  errors:
+    # Treat these as hard failures so regressions cannot slip through.
+    dead_code: error
+    unused_import: error
+    unused_local_variable: error
+
+linter:
+  rules:
+    avoid_print: true
+    prefer_single_quotes: true
+    always_declare_return_types: true
+    avoid_empty_else: true
+    prefer_const_constructors: true
+    prefer_final_locals: true
+    unnecessary_parenthesis: true
+
+# Additional information about this file can be found at
+# https://dart.dev/guides/language/analysis-options

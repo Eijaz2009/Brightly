@@ -9,7 +9,6 @@ import '../widgets/google_auth_setup_dialog.dart';
 import '../widgets/password_reset_sheet.dart';
 import 'admin_dashboard.dart';
 import 'home_screen.dart';
-import 'onboarding_screen.dart';
 import 'register_screen.dart';
 
 class LoginScreen extends StatefulWidget {
@@ -33,8 +32,8 @@ class _LoginScreenState extends State<LoginScreen> {
   bool _isFacebookLoading = false;
   bool _rememberMe = false;
 
-  static const Color neonLime = Color(0xFFC6FF33);
-  static const Color trueBlack = Color(0xFF000000);
+  static const Color neonLime = Color(0xFFCEEB45);
+  static const Color trueBlack = Color(0xFF121212);
   static const Color textMuted = Color(0xFF6B7280);
   static const Color inputBorder = Color(0xFFE5E7EB);
 
@@ -159,6 +158,17 @@ class _LoginScreenState extends State<LoginScreen> {
       return;
     }
 
+    if (result.wasCancelled) return;
+
+    final diagnosis = result.facebookDiagnosis;
+    if (diagnosis != null && diagnosis.showSetupSteps) {
+      await showFacebookAuthSetupDialog(
+        context,
+        reason: diagnosis.message,
+      );
+      return;
+    }
+
     _showToast(
       result.error ?? 'Facebook sign-in was unsuccessful. Please try again.',
       isError: true,
@@ -217,89 +227,28 @@ class _LoginScreenState extends State<LoginScreen> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  // Top navigation & brand badge bar
+                  // Top logo (only image, larger size, no border, no text)
                   Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    mainAxisAlignment: MainAxisAlignment.start,
                     children: [
-                      // Brand Pill
-                      Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                        decoration: BoxDecoration(
-                          color: const Color(0xFFF9FAFB),
-                          borderRadius: BorderRadius.circular(20),
-                          border: Border.all(color: inputBorder),
-                        ),
-                        child: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Image.asset(
-                              'assets/images/logo_combined.png',
-                              height: 18,
-                              fit: BoxFit.contain,
-                              errorBuilder: (context, error, stackTrace) => const Icon(
-                                Icons.school_rounded,
-                                size: 18,
-                                color: trueBlack,
-                              ),
-                            ),
-                            const SizedBox(width: 8),
-                            Text(
-                              'ScholarPath',
-                              style: GoogleFonts.plusJakartaSans(
-                                fontSize: 13,
-                                fontWeight: FontWeight.w800,
-                                color: trueBlack,
-                                letterSpacing: -0.3,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-
-                      // Intro / Tour Button
-                      InkWell(
-                        onTap: () => Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (_) => const OnboardingScreen(),
-                          ),
-                        ),
-                        borderRadius: BorderRadius.circular(16),
-                        child: Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
-                          decoration: BoxDecoration(
-                            color: Colors.white,
-                            borderRadius: BorderRadius.circular(16),
-                            border: Border.all(color: inputBorder),
-                          ),
-                          child: Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              const Icon(
-                                Icons.explore_outlined,
-                                size: 15,
-                                color: textMuted,
-                              ),
-                              const SizedBox(width: 5),
-                              Text(
-                                'App Tour',
-                                style: GoogleFonts.plusJakartaSans(
-                                  fontSize: 12,
-                                  fontWeight: FontWeight.w700,
-                                  color: textMuted,
-                                ),
-                              ),
-                            ],
-                          ),
+                      Image.asset(
+                        'assets/images/brightly_custom_logo.png',
+                        height: 52,
+                        width: 52,
+                        fit: BoxFit.contain,
+                        errorBuilder: (context, error, stackTrace) => const Icon(
+                          Icons.school_rounded,
+                          size: 44,
+                          color: trueBlack,
                         ),
                       ),
                     ],
                   ),
-                  const SizedBox(height: 32),
+                  const SizedBox(height: 12),
 
                   // Header Title
                   Text(
-                    'Welcome Back!',
+                    'We Say Hello!',
                     style: GoogleFonts.plusJakartaSans(
                       fontSize: 32,
                       fontWeight: FontWeight.w900,
@@ -537,7 +486,7 @@ class _LoginScreenState extends State<LoginScreen> {
 // MODERN FORM FIELD WITH FOCUS GLOW & INLINE VALIDATION
 // ═══════════════════════════════════════════════════════════════════
 
-class _ModernFormField extends StatefulWidget {
+class _ModernFormField extends StatelessWidget {
   final TextEditingController controller;
   final FocusNode focusNode;
   final String hint;
@@ -565,97 +514,69 @@ class _ModernFormField extends StatefulWidget {
   });
 
   @override
-  State<_ModernFormField> createState() => _ModernFormFieldState();
-}
-
-class _ModernFormFieldState extends State<_ModernFormField> {
-  bool _isFocused = false;
-
-  @override
-  void initState() {
-    super.initState();
-    widget.focusNode.addListener(_onFocusChange);
-  }
-
-  @override
-  void dispose() {
-    widget.focusNode.removeListener(_onFocusChange);
-    super.dispose();
-  }
-
-  void _onFocusChange() {
-    if (mounted) {
-      setState(() => _isFocused = widget.focusNode.hasFocus);
-    }
-  }
-
-  @override
   Widget build(BuildContext context) {
-    const trueBlack = Color(0xFF000000);
+    const trueBlack = Color(0xFF121212);
     const inputBorder = Color(0xFFE5E7EB);
-    const neonLime = Color(0xFFC6FF33);
+    const neonLime = Color(0xFFCEEB45);
 
-    return AnimatedContainer(
-      duration: const Duration(milliseconds: 200),
-      decoration: BoxDecoration(
-        color: _isFocused ? Colors.white : const Color(0xFFFAFAFA),
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(
-          color: _isFocused ? trueBlack : inputBorder,
-          width: _isFocused ? 1.6 : 1.2,
-        ),
-        boxShadow: _isFocused
-            ? [
-                BoxShadow(
-                  color: neonLime.withValues(alpha: 0.28),
-                  blurRadius: 12,
-                  offset: const Offset(0, 3),
-                ),
-              ]
-            : [],
+    return TextFormField(
+      controller: controller,
+      focusNode: focusNode,
+      obscureText: obscure,
+      keyboardType: keyboardType,
+      textInputAction: textInputAction,
+      autofillHints: autofillHints,
+      autovalidateMode: AutovalidateMode.onUserInteraction,
+      validator: validator,
+      onFieldSubmitted: onFieldSubmitted,
+      style: GoogleFonts.plusJakartaSans(
+        fontSize: 15,
+        fontWeight: FontWeight.w600,
+        color: trueBlack,
       ),
-      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 2),
-      child: TextFormField(
-        controller: widget.controller,
-        focusNode: widget.focusNode,
-        obscureText: widget.obscure,
-        keyboardType: widget.keyboardType,
-        textInputAction: widget.textInputAction,
-        autofillHints: widget.autofillHints,
-        autovalidateMode: AutovalidateMode.onUserInteraction,
-        validator: widget.validator,
-        onFieldSubmitted: widget.onFieldSubmitted,
-        style: GoogleFonts.plusJakartaSans(
-          fontSize: 15,
+      decoration: InputDecoration(
+        filled: true,
+        fillColor: const Color(0xFFFAFAFA),
+        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(16),
+          borderSide: const BorderSide(color: inputBorder, width: 1.2),
+        ),
+        enabledBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(16),
+          borderSide: const BorderSide(color: inputBorder, width: 1.2),
+        ),
+        focusedBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(16),
+          borderSide: const BorderSide(color: trueBlack, width: 1.6),
+        ),
+        errorBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(16),
+          borderSide: const BorderSide(color: AppStyle.danger, width: 1.2),
+        ),
+        focusedErrorBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(16),
+          borderSide: const BorderSide(color: AppStyle.danger, width: 1.6),
+        ),
+        hintText: hint,
+        hintStyle: GoogleFonts.plusJakartaSans(
+          fontSize: 14.5,
+          fontWeight: FontWeight.w500,
+          color: const Color(0xFF9CA3AF),
+        ),
+        errorStyle: GoogleFonts.plusJakartaSans(
+          fontSize: 12,
           fontWeight: FontWeight.w600,
-          color: trueBlack,
+          color: AppStyle.danger,
         ),
-        decoration: InputDecoration(
-          border: InputBorder.none,
-          errorBorder: InputBorder.none,
-          focusedErrorBorder: InputBorder.none,
-          focusedBorder: InputBorder.none,
-          enabledBorder: InputBorder.none,
-          hintText: widget.hint,
-          hintStyle: GoogleFonts.plusJakartaSans(
-            fontSize: 14.5,
-            fontWeight: FontWeight.w500,
-            color: const Color(0xFF9CA3AF),
-          ),
-          errorStyle: GoogleFonts.plusJakartaSans(
-            fontSize: 12,
-            fontWeight: FontWeight.w600,
-            color: AppStyle.danger,
-          ),
-          prefixIcon: Icon(
-            widget.icon,
-            size: 20,
-            color: _isFocused ? trueBlack : const Color(0xFF9CA3AF),
-          ),
-          prefixIconConstraints: const BoxConstraints(minWidth: 36, minHeight: 36),
-          suffixIcon: widget.suffixWidget,
-          suffixIconConstraints: const BoxConstraints(minWidth: 36, minHeight: 36),
+        prefixIcon: Icon(
+          icon,
+          size: 20,
+          color: const Color(0xFF9CA3AF),
         ),
+        prefixIconConstraints: const BoxConstraints(minWidth: 44, minHeight: 44),
+        suffixIcon: suffixWidget,
+        suffixIconConstraints: const BoxConstraints(minWidth: 44, minHeight: 44),
       ),
     );
   }
@@ -678,8 +599,8 @@ class _PrimaryActionButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    const neonLime = Color(0xFFC6FF33);
-    const trueBlack = Color(0xFF000000);
+    const neonLime = Color(0xFFCEEB45);
+    const trueBlack = Color(0xFF121212);
 
     return Material(
       color: Colors.transparent,
@@ -752,7 +673,7 @@ class _GoogleAuthButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    const trueBlack = Color(0xFF000000);
+    const trueBlack = Color(0xFF121212);
     const inputBorder = Color(0xFFE5E7EB);
 
     return Material(
@@ -820,7 +741,7 @@ class _FacebookAuthButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    const trueBlack = Color(0xFF000000);
+    const trueBlack = Color(0xFF121212);
     const inputBorder = Color(0xFFE5E7EB);
     const fbBlue = Color(0xFF1877F2);
 

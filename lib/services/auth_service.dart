@@ -6,6 +6,9 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 
+import 'package:flutter_facebook_auth/flutter_facebook_auth.dart';
+
+import 'facebook_auth_config.dart';
 import 'google_auth_config.dart';
 
 class AuthResult {
@@ -13,21 +16,30 @@ class AuthResult {
   final String? error;
   final String role;
   final bool isBlocked;
+  final bool isCancelled;
 
   /// Set for Google sign-in so the UI can distinguish "user cancelled" (silent)
   /// from "misconfigured OAuth" (show setup steps).
   final GoogleAuthDiagnosis? googleDiagnosis;
+
+  /// Set for Facebook sign-in.
+  final FacebookAuthDiagnosis? facebookDiagnosis;
 
   const AuthResult({
     required this.success,
     this.error,
     this.role = 'user',
     this.isBlocked = false,
+    this.isCancelled = false,
     this.googleDiagnosis,
+    this.facebookDiagnosis,
   });
 
-  /// True when the user simply closed the popup — no error UI should appear.
-  bool get wasCancelled => googleDiagnosis?.isCancelled ?? false;
+  /// True when the user simply closed the popup/flow — no error UI should appear.
+  bool get wasCancelled =>
+      isCancelled ||
+      (googleDiagnosis?.isCancelled ?? false) ||
+      (facebookDiagnosis?.isCancelled ?? false);
 }
 
 class AuthService {
@@ -76,7 +88,11 @@ class AuthService {
   /// Get user role and blocked status from Firestore
   static Future<Map<String, dynamic>> _getUserMeta(String uid) async {
     try {
-      final doc = await _firestore.collection('users').doc(uid).get();
+      final doc = await _firestore
+          .collection('users')
+          .doc(uid)
+          .get()
+          .timeout(const Duration(seconds: 3));
       if (doc.exists) {
         final data = doc.data() as Map<String, dynamic>;
         return <String, dynamic>{
@@ -89,7 +105,7 @@ class AuthService {
         };
       }
     } catch (e) {
-      debugPrint('Error fetching user meta: $e');
+      debugPrint('Error fetching user meta (fallback to user): $e');
     }
     return <String, dynamic>{
       'role': 'user',
@@ -235,16 +251,41 @@ class AuthService {
 
   /// Native path: `google_sign_in` credential exchange.
   static Future<AuthResult> _signInWithGoogleNative() async {
+    return _attemptGoogleSignInNative(GoogleAuthConfig.serverClientId);
+  }
+
+  static Future<AuthResult> _attemptGoogleSignInNative(
+    String serverClientId, {
+    bool isFallback = false,
+  }) async {
     try {
       final googleSignIn = GoogleSignIn(
-        serverClientId: GoogleAuthConfig.serverClientId,
+        serverClientId: serverClientId,
       );
+      try {
+        await googleSignIn.signOut();
+      } catch (_) {}
+
       final GoogleSignInAccount? googleUser = await googleSignIn.signIn();
 
       if (googleUser == null) return _cancelled;
 
       final GoogleSignInAuthentication googleAuth =
           await googleUser.authentication;
+
+      if (googleAuth.idToken == null && googleAuth.accessToken == null) {
+        debugPrint('Google Sign-In: idToken & accessToken null with $serverClientId');
+        if (!isFallback &&
+            GoogleAuthConfig.fallbackServerClientId.isNotEmpty &&
+            GoogleAuthConfig.fallbackServerClientId != serverClientId) {
+          debugPrint('Retrying with fallback serverClientId...');
+          return _attemptGoogleSignInNative(
+            GoogleAuthConfig.fallbackServerClientId,
+            isFallback: true,
+          );
+        }
+      }
+
       final AuthCredential credential = GoogleAuthProvider.credential(
         idToken: googleAuth.idToken,
         accessToken: googleAuth.accessToken,
@@ -257,6 +298,16 @@ class AuthService {
       return _finaliseGoogleUser(user);
     } on FirebaseAuthException catch (e) {
       debugPrint('Firebase auth error: ${e.code} ${e.message}');
+      if (!isFallback &&
+          (e.code == 'invalid-credential' || e.code == 'invalid-verification-id') &&
+          GoogleAuthConfig.fallbackServerClientId.isNotEmpty &&
+          GoogleAuthConfig.fallbackServerClientId != serverClientId) {
+        debugPrint('invalid-credential encountered, retrying with fallback serverClientId...');
+        return _attemptGoogleSignInNative(
+          GoogleAuthConfig.fallbackServerClientId,
+          isFallback: true,
+        );
+      }
       final diagnosis = GoogleAuthDiagnosis.from(e);
       return AuthResult(
         success: false,
@@ -266,6 +317,26 @@ class AuthService {
     } catch (e) {
       final diagnosis = GoogleAuthDiagnosis.from(e);
       debugPrint('Google sign-in diagnosis: ${diagnosis.outcome} — $e');
+
+      if (diagnosis.outcome == GoogleAuthOutcome.configuration) {
+        debugPrint('Google native auth configuration issue, attempting provider flow fallback...');
+        try {
+          final userCredential = await _auth.signInWithProvider(GoogleAuthProvider());
+          final user = userCredential.user;
+          if (user == null) return _cancelled;
+          return _finaliseGoogleUser(user);
+        } on FirebaseAuthException catch (fbError) {
+          if (fbError.code == 'popup-closed-by-user' ||
+              fbError.code == 'user-cancelled' ||
+              fbError.code == 'web-context-cancelled') {
+            return _cancelled;
+          }
+          debugPrint('Google fallback provider auth error: ${fbError.code} ${fbError.message}');
+        } catch (fallbackError) {
+          debugPrint('Google fallback provider unexpected error: $fallbackError');
+        }
+      }
+
       return AuthResult(
         success: false,
         error: diagnosis.message,
@@ -276,6 +347,7 @@ class AuthService {
 
   static const AuthResult _cancelled = AuthResult(
     success: false,
+    isCancelled: true,
     error: 'Google Sign-In was cancelled.',
     googleDiagnosis: GoogleAuthDiagnosis(
       outcome: GoogleAuthOutcome.cancelled,
@@ -286,20 +358,70 @@ class AuthService {
   /// Sign in with Facebook.
   static Future<AuthResult> signInWithFacebook() async {
     try {
+      if (!kIsWeb) {
+        // Native Android / iOS via flutter_facebook_auth
+        final LoginResult loginResult = await FacebookAuth.instance.login(
+          permissions: const ['email', 'public_profile'],
+        );
+
+        if (loginResult.status == LoginStatus.success && loginResult.accessToken != null) {
+          final OAuthCredential credential = FacebookAuthProvider.credential(
+            loginResult.accessToken!.tokenString,
+          );
+          final userCredential = await _auth.signInWithCredential(credential);
+          final user = userCredential.user;
+          if (user == null) {
+            return const AuthResult(
+              success: false,
+              isCancelled: true,
+              error: 'Login Facebook dibatalkan.',
+            );
+          }
+          return _finaliseSocialUser(user, 'Facebook User');
+        }
+
+        if (loginResult.status == LoginStatus.cancelled) {
+          return const AuthResult(
+            success: false,
+            isCancelled: true,
+            error: 'Login Facebook dibatalkan.',
+          );
+        }
+
+        final errorMsg = loginResult.message ?? 'Login Facebook gagal.';
+        debugPrint('Facebook SDK login status: ${loginResult.status}, error: $errorMsg');
+        final diagnosis = FacebookAuthDiagnosis.from(errorMsg);
+        return AuthResult(
+          success: false,
+          error: diagnosis.message,
+          facebookDiagnosis: diagnosis,
+        );
+      }
+
       final provider = OAuthProvider('facebook.com');
+      provider.addScope('email');
+      provider.addScope('public_profile');
       provider.setCustomParameters({'display': 'popup'});
 
       UserCredential userCredential;
-      if (kIsWeb) {
+      try {
         userCredential = await _auth.signInWithPopup(provider);
-      } else {
-        userCredential = await _auth.signInWithProvider(provider);
+      } on FirebaseAuthException catch (e) {
+        if (e.code == 'popup-blocked') {
+          await _auth.signInWithRedirect(provider);
+          return const AuthResult(
+            success: false,
+            error: 'Mengarahkan ke login Facebook...',
+          );
+        }
+        rethrow;
       }
 
       final user = userCredential.user;
       if (user == null) {
         return const AuthResult(
           success: false,
+          isCancelled: true,
           error: 'Login Facebook dibatalkan.',
         );
       }
@@ -307,21 +429,35 @@ class AuthService {
       return _finaliseSocialUser(user, 'Facebook User');
     } on FirebaseAuthException catch (e) {
       debugPrint('Facebook auth error: ${e.code} ${e.message}');
-      if (e.code == 'popup-closed-by-user' || e.code == 'user-cancelled') {
-        return const AuthResult(
+      final diagnosis = FacebookAuthDiagnosis.from(e);
+      if (diagnosis.isCancelled) {
+        return AuthResult(
           success: false,
+          isCancelled: true,
           error: 'Login Facebook dibatalkan.',
+          facebookDiagnosis: diagnosis,
         );
       }
       return AuthResult(
         success: false,
-        error: 'Login Facebook gagal: ${e.message}',
+        error: diagnosis.message,
+        facebookDiagnosis: diagnosis,
       );
     } catch (e) {
       debugPrint('Facebook sign-in error: $e');
-      return const AuthResult(
+      final diagnosis = FacebookAuthDiagnosis.from(e);
+      if (diagnosis.isCancelled) {
+        return AuthResult(
+          success: false,
+          isCancelled: true,
+          error: 'Login Facebook dibatalkan.',
+          facebookDiagnosis: diagnosis,
+        );
+      }
+      return AuthResult(
         success: false,
-        error: 'Login Facebook gagal. Periksa koneksi atau konfigurasi App ID Anda.',
+        error: diagnosis.message,
+        facebookDiagnosis: diagnosis,
       );
     }
   }
@@ -335,13 +471,17 @@ class AuthService {
     final meta = await _getUserMeta(user.uid);
 
     try {
-      await _firestore.collection('users').doc(user.uid).set(<String, dynamic>{
-        'nama': user.displayName ?? defaultName,
-        'name': user.displayName ?? defaultName,
-        'email': user.email ?? '',
-        if (!meta['exists']) 'role': 'user',
-        'lastLoginAt': FieldValue.serverTimestamp(),
-      }, SetOptions(merge: true));
+      await _firestore
+          .collection('users')
+          .doc(user.uid)
+          .set(<String, dynamic>{
+            'nama': user.displayName ?? defaultName,
+            'name': user.displayName ?? defaultName,
+            'email': user.email ?? '',
+            if (!meta['exists']) 'role': 'user',
+            'lastLoginAt': FieldValue.serverTimestamp(),
+          }, SetOptions(merge: true))
+          .timeout(const Duration(seconds: 3));
     } catch (e) {
       debugPrint('Social profile upsert failed (login still succeeds): $e');
     }

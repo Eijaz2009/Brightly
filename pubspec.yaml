@@ -25,6 +25,7 @@ dependencies:
   fl_chart: ^0.70.2
   google_generative_ai: ^0.4.6
   shared_preferences: ^2.5.4
+  flutter_facebook_auth: ^7.2.0
 
 dev_dependencies:
   flutter_test:
@@ -36,7 +37,7 @@ flutter:
   assets:
     - assets/ai_config.json
     - assets/images/
-    - assets/images/logo_dark.png
+    - assets/images/brightly_custom_logo.png
     - assets/images/logo_combined.png
     - assets/images/google_logo.png
     - assets/images/onboarding_1.jpg

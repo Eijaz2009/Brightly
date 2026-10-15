@@ -128,29 +128,22 @@ class _SplashScreenState extends State<SplashScreen>
 
   @override
   Widget build(BuildContext context) {
-    // Sesuai contoh desain: Background hijau neon vibran dengan logo Brightly hitam
-    const neonLime = Color(0xFFC6FF33);
-    const trueBlack = Color(0xFF000000);
+    const trueBlack = Color(0xFF121212);
 
     return Scaffold(
-      backgroundColor: neonLime,
+      backgroundColor: Colors.white,
       body: Center(
         child: FadeTransition(
           opacity: _fade,
           child: Column(
             mainAxisSize: MainAxisSize.min,
+            mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              ColorFiltered(
-                colorFilter: const ColorFilter.mode(
-                  trueBlack,
-                  BlendMode.srcIn,
-                ),
-                child: Image.asset(
-                  'assets/images/logo_combined.png',
-                  width: 90,
-                  height: 90,
-                  fit: BoxFit.contain,
-                ),
+              Image.asset(
+                'assets/images/brightly_custom_logo.png',
+                width: 110,
+                height: 110,
+                fit: BoxFit.contain,
               ),
               const SizedBox(height: 18),
               Text(

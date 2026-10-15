@@ -131,7 +131,7 @@ class _AiFab extends StatelessWidget {
   Widget build(BuildContext context) {
     return Positioned(
       right: 20,
-      bottom: 100,
+      bottom: 115,
       child: Semantics(
         button: true,
         label: 'Tanya Brightly AI',
@@ -260,7 +260,7 @@ class _DashboardTabState extends State<_DashboardTab> {
         // ── Stat bubbles ──
         SliverToBoxAdapter(
           child: Padding(
-            padding: const EdgeInsets.fromLTRB(20, 18, 20, 0),
+            padding: const EdgeInsets.fromLTRB(20, 28, 20, 0),
             child: Row(
               children: [
                 Expanded(
@@ -292,7 +292,7 @@ class _DashboardTabState extends State<_DashboardTab> {
         ),
 
         // ── AI banner ──
-        const SliverToBoxAdapter(child: SizedBox(height: 16)),
+        const SliverToBoxAdapter(child: SizedBox(height: 24)),
         SliverToBoxAdapter(child: _AiBanner(onTap: _openAIChat)),
 
         // ── Featured carousel ──

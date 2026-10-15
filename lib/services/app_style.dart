@@ -18,18 +18,18 @@ class AppStyle {
   // `#000000` (True Black)
   // `#C6FF33` (Lime Neon Accent)
   // ══════════════════════════════════════════════════════════════════
-  static const Color ink = Color(0xFF000000);
-  static const Color inkSoft = Color(0xFF141414);
-  static const Color spark = Color(0xFFC6FF33);
-  static const Color sparkSoft = Color(0xFFD6FF66);
-  static const Color lime = Color(0xFFC6FF33);
+  static const Color ink = Color(0xFF121212);
+  static const Color inkSoft = Color(0xFF1F1F1F);
+  static const Color spark = Color(0xFFCEEB45);
+  static const Color sparkSoft = Color(0xFFDAF266);
+  static const Color lime = Color(0xFFCEEB45);
   static const Color lavender = Color(0xFF1A260D);
 
   // Accent roles kept under their legacy names so call sites stay valid.
   static const Color coral = Color(0xFFFF5252);
   static const Color sunny = Color(0xFFFFD166);
   static const Color periwinkle = Color(0xFF1A260D);
-  static const Color mint = Color(0xFFC6FF33);
+  static const Color mint = Color(0xFFCEEB45);
   static const Color lilac = lavender;
 
   // ══════════════════════════════════════════════════════════════════
@@ -39,7 +39,7 @@ class AppStyle {
   static const Color paper = Color(0xFFFFFFFF);    // light mode card
   static const Color sand = Color(0xFFDCE2D1);     // light mode secondary
 
-  static const Color inkDark = Color(0xFF000000);  // dark mode canvas (#000000)
+  static const Color inkDark = Color(0xFF121212);  // dark mode canvas (#121212)
   static const Color paperDark = Color(0xFF0D0D0D);// dark mode card
   static const Color sandDark = Color(0xFF161616);  // dark mode secondary
   static const Color lineDark = Color(0xFF222222);  // dark mode border
@@ -114,13 +114,13 @@ class AppStyle {
       return const LinearGradient(
         begin: Alignment.topLeft,
         end: Alignment.bottomRight,
-        colors: [Color(0xFFC6FF33), Color(0xFF000000)],
+        colors: [Color(0xFFCEEB45), Color(0xFF121212)],
       );
     }
     return const LinearGradient(
       begin: Alignment.topLeft,
       end: Alignment.bottomRight,
-      colors: [Color(0xFFC6FF33), Color(0xFF141414)],
+      colors: [Color(0xFFCEEB45), Color(0xFF141414)],
     );
   }
 
@@ -557,71 +557,13 @@ class AppStyle {
     VoidCallback? onCleared,
     String hint = 'Cari beasiswa...',
   }) {
-    final dark = isDark(context);
-    return Container(
-      height: 50,
-      decoration: BoxDecoration(
-        color: getCardColor(context),
-        borderRadius: BorderRadius.circular(rPill),
-        border: Border.all(color: getBorderColor(context), width: 1),
-      ),
-      child: Row(
-        children: [
-          const SizedBox(width: 16),
-          Icon(Icons.search_rounded, color: getSubtitleColor(context), size: 20),
-          const SizedBox(width: 10),
-          Expanded(
-            child: TextField(
-              controller: controller,
-              focusNode: focusNode,
-              onChanged: onChanged,
-              textInputAction: TextInputAction.search,
-              style: font(
-                context,
-                size: 13.5,
-                weight: FontWeight.w700,
-                color: dark ? Colors.white : ink,
-              ),
-              decoration: InputDecoration(
-                isDense: true,
-                hintText: hint,
-                hintStyle: font(
-                  context,
-                  size: 13,
-                  weight: FontWeight.w500,
-                  color: getSubtitleColor(context).withValues(alpha: 0.75),
-                ),
-                border: InputBorder.none,
-              ),
-            ),
-          ),
-          if (controller != null)
-            ValueListenableBuilder<TextEditingValue>(
-              valueListenable: controller,
-              builder: (context, value, _) => value.text.isEmpty
-                  ? const SizedBox(width: 12)
-                  : Padding(
-                      padding: const EdgeInsets.only(right: 8),
-                      child: IconButton(
-                        onPressed: () {
-                          controller.clear();
-                          onCleared?.call();
-                        },
-                        icon: Icon(
-                          Icons.close_rounded,
-                          size: 18,
-                          color: getSubtitleColor(context),
-                        ),
-                        padding: EdgeInsets.zero,
-                        constraints: const BoxConstraints(
-                          minWidth: 34,
-                          minHeight: 34,
-                        ),
-                      ),
-                    ),
-            ),
-        ],
-      ),
+    return searchFieldPill(
+      context: context,
+      controller: controller,
+      focusNode: focusNode,
+      onChanged: onChanged,
+      onCleared: onCleared,
+      hint: hint,
     );
   }
 

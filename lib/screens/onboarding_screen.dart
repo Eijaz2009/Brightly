@@ -15,8 +15,8 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
   final PageController _pageController = PageController();
   int _currentPage = 0;
 
-  static const Color neonLime = Color(0xFFC6FF33);
-  static const Color trueBlack = Color(0xFF000000);
+  static const Color neonLime = Color(0xFFCEEB45);
+  static const Color trueBlack = Color(0xFF121212);
   static const Color textMuted = Color(0xFF6B7280);
 
   final List<Map<String, dynamic>> _pages = [
@@ -26,7 +26,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
           'Jelajahi ribuan peluang beasiswa dan pendidikan global terbaik yang sesuai dengan minat dan prestasimu.',
       'image': 'assets/images/onboarding_1.jpg',
       'tag': 'Global Scholarships',
-      'accent': const Color(0xFFC6FF33),
+      'accent': const Color(0xFFCEEB45),
     },
     {
       'title': 'Easy to apply on\nmobile app',
@@ -34,7 +34,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
           'Proses pendaftaran cepat, bimbingan berkas pintar, dan pantau status kelolosanmu langsung dari genggaman.',
       'image': 'assets/images/onboarding_2.jpg',
       'tag': '1-Click Application',
-      'accent': const Color(0xFFC6FF33),
+      'accent': const Color(0xFFCEEB45),
     },
     {
       'title': 'Over 4,000 awards\nwaiting for you',
@@ -42,7 +42,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
           'Raih kesempatan beasiswa penuh (fully funded) jenjang S1, S2, hingga S3 dari ratusan universitas top dunia.',
       'image': 'assets/images/onboarding_3.jpg',
       'tag': '4,000+ Verified',
-      'accent': const Color(0xFFC6FF33),
+      'accent': const Color(0xFFCEEB45),
     },
   ];
 

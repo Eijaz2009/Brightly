@@ -24,9 +24,20 @@
 /// "Login Google gagal. Silakan coba lagi." yang generik.
 class GoogleAuthConfig {
   /// Web (type 3) OAuth client dari `google-services.json`.
-  /// Jangan diganti dengan client Android (type 1) atau iOS.
-  static const String defaultServerClientId =
-      '869400565061-j9as037t4p92he7oeisfhd3iguh0luis.apps.googleusercontent.com';
+  /// Ini adalah OAuth client yang WAJIB digunakan sebagai `serverClientId` di Android/iOS
+  /// agar Google Play Services menerbitkan ID Token yang valid untuk backend Firebase.
+  static const String webClientId =
+      '333990211250-85l7f0ia2l248c64pt1e9si4f076l36j.apps.googleusercontent.com';
+
+  /// Android (type 1) OAuth client dari `google-services.json`.
+  static const String androidClientId =
+      '333990211250-85l7f0ia2l248c64pt1e9si4f076l36j.apps.googleusercontent.com';
+
+  /// Default client id yang dipakai sebagai serverClientId.
+  static const String defaultServerClientId = webClientId;
+
+  /// Fallback client id jika diperlukan.
+  static const String fallbackServerClientId = androidClientId;
 
   static const String _serverClientIdOverride = String.fromEnvironment(
     'GOOGLE_SERVER_CLIENT_ID',
@@ -57,7 +68,7 @@ class GoogleAuthConfig {
   /// Syarat yang harus benar untuk login Google di Android/iOS.
   static List<String> get nativeSetupSteps => const <String>[
     'Firebase Console → Project settings → aplikasi Android ini',
-    'Pastikan package name: com.example.scholar_path',
+    'Pastikan package name: com.brightly.scholarpath',
     'Tambahkan SHA-1 debug DAN SHA-1 release (keytool / Play App signing)',
     'Download ulang google-services.json lalu rebuild aplikasinya',
     'Aktifkan provider Google di Authentication → Sign-in method',

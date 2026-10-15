@@ -1,4 +1,4 @@
-package com.example.scholar_path
+package com.brightly.scholarpath
 
 import io.flutter.embedding.android.FlutterActivity
 

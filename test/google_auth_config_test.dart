@@ -96,28 +96,21 @@ void main() {
   });
 
   group('GoogleAuthConfig', () {
-    test('the native server client id matches firebase_options.dart', () {
+    test('the native server client id is the Web client id (type 3)', () {
       expect(GoogleAuthConfig.isConfigured, isTrue);
       expect(
         GoogleAuthConfig.serverClientId,
-        DefaultFirebaseOptions.ios.androidClientId,
-        reason: 'must stay in sync with firebase_options.dart',
+        GoogleAuthConfig.webClientId,
+        reason: 'must be the Web client id so Firebase accepts the ID token',
       );
     });
 
-    test('the Android client id is never used as the OAuth client on web', () {
-      // Regression guard for the bug that broke Google sign-in on web.
-      //
-      // `869400565061-pqou8v9ad47fgl76vev3ifqnes0hojt8` is an Android/iOS
-      // client (Google reports its app name as "Potato App"). The old web flow
-      // sent it with `redirect_uri=http://localhost:<port>`, so Google answered
-      // `Error 400: redirect_uri_mismatch` on every origin. The web path now
-      // uses the Firebase-hosted popup and needs no client id at all.
-      const wrongClient =
-          '869400565061-pqou8v9ad47fgl76vev3ifqnes0hojt8.apps.googleusercontent.com';
-
-      expect(GoogleAuthConfig.serverClientId, isNot(wrongClient));
-      expect(GoogleAuthConfig.defaultServerClientId, isNot(wrongClient));
+    test('the Android client id matches firebase_options.dart', () {
+      expect(
+        GoogleAuthConfig.androidClientId,
+        DefaultFirebaseOptions.ios.androidClientId,
+        reason: 'must stay in sync with androidClientId in firebase_options.dart',
+      );
     });
 
     test('web setup steps point at Firebase Authorized domains', () {

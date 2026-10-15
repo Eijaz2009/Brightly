@@ -20,29 +20,30 @@ class DefaultFirebaseOptions {
   }
 
   static const FirebaseOptions web = FirebaseOptions(
-    apiKey: 'AIzaSyAZqrS2OqwZugXD0J1rt0OM1HG-ApKiVts',
-    appId: '1:869400565061:web:497e315c3d3d245efada2c',
-    messagingSenderId: '869400565061',
-    projectId: 'scholarpath-e5d39',
-    authDomain: 'scholarpath-e5d39.firebaseapp.com',
-    storageBucket: 'scholarpath-e5d39.firebasestorage.app',
+    apiKey: 'AIzaSyCXOnRGXoa7LM5xiultKPgQ5fa--7EZPmA',
+    appId: '1:333990211250:web:brightly',
+    messagingSenderId: '333990211250',
+    projectId: 'brightly-a864b',
+    authDomain: 'brightly-a864b.firebaseapp.com',
+    storageBucket: 'brightly-a864b.firebasestorage.app',
   );
 
   static const FirebaseOptions android = FirebaseOptions(
-    apiKey: 'AIzaSyACo2hthzxfDSyvJPmqA59t9HIeFq0NXt8',
-    appId: '1:869400565061:android:2502bd945910d3a4fada2c',
-    messagingSenderId: '869400565061',
-    projectId: 'scholarpath-e5d39',
-    storageBucket: 'scholarpath-e5d39.firebasestorage.app',
+    apiKey: 'AIzaSyCXOnRGXoa7LM5xiultKPgQ5fa--7EZPmA',
+    appId: '1:333990211250:android:3438cef958c265d80063ab',
+    messagingSenderId: '333990211250',
+    projectId: 'brightly-a864b',
+    storageBucket: 'brightly-a864b.firebasestorage.app',
   );
+
   static const FirebaseOptions ios = FirebaseOptions(
-    apiKey: 'AIzaSyBuj4Q448-UrxovMLxWHCb2xk1pu5MzcVE',
-    appId: '1:869400565061:ios:ece00e5bbb6ecdedfada2c',
-    messagingSenderId: '869400565061',
-    projectId: 'scholarpath-e5d39',
-    storageBucket: 'scholarpath-e5d39.firebasestorage.app',
-    androidClientId: '869400565061-j9as037t4p92he7oeisfhd3iguh0luis.apps.googleusercontent.com',
-    iosClientId: '869400565061-6kegpkcqvvg0sgu723ub3sdtvkdtv710.apps.googleusercontent.com',
+    apiKey: 'AIzaSyCXOnRGXoa7LM5xiultKPgQ5fa--7EZPmA',
+    appId: '1:333990211250:ios:brightly',
+    messagingSenderId: '333990211250',
+    projectId: 'brightly-a864b',
+    storageBucket: 'brightly-a864b.firebasestorage.app',
+    androidClientId: '333990211250-85l7f0ia2l248c64pt1e9si4f076l36j.apps.googleusercontent.com',
+    iosClientId: '333990211250-85l7f0ia2l248c64pt1e9si4f076l36j.apps.googleusercontent.com',
     iosBundleId: 'com.example.scholarPath',
   );
 }

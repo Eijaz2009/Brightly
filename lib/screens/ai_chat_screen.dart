@@ -602,7 +602,7 @@ Mulai dengan antusias dan selalu siap membantu!
                         begin: Alignment.topLeft,
                         end: Alignment.bottomRight,
                         colors: isDark
-                            ? [const Color(0xFF0A0A0A), const Color(0xFF000000)]
+                            ? [const Color(0xFF1F1F1F), const Color(0xFF121212)]
                             : [Colors.white, const Color(0xFFF0F0F0)],
                       ),
                 borderRadius: BorderRadius.only(
